@@ -461,6 +461,26 @@ func cmdAdd(args *skel.CmdArgs) error {
 				return err
 			}
 
+			// set stable mac address when only one v4 ip
+			var ipV4cs []*current.IPConfig
+			for _, ipc := range result.IPs {
+				if ipc.Version == "4" {
+					ipV4cs = append(ipV4cs, ipc)
+				}
+			}
+			if len(ipV4cs) == 1 {
+				if err := ip.SetHWAddrByIP(args.IfName, ipV4cs[0].Address.IP, nil); err != nil {
+					return err
+				}
+			}
+
+			// Refetch the veth since its MAC address may changed
+			link, err := netlink.LinkByName(args.IfName)
+			if err != nil {
+				return fmt.Errorf("could not lookup %q: %v", args.IfName, err)
+			}
+			containerInterface.Mac = link.Attrs().HardwareAddr.String()
+
 			// Send a gratuitous arp
 			for _, ipc := range result.IPs {
 				if ipc.Version == "4" {
