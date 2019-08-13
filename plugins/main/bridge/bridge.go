@@ -480,6 +480,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 				return fmt.Errorf("could not lookup %q: %v", args.IfName, err)
 			}
 			containerInterface.Mac = link.Attrs().HardwareAddr.String()
+			contVeth.HardwareAddr = link.Attrs().HardwareAddr
 
 			// Send a gratuitous arp
 			for _, ipc := range result.IPs {
